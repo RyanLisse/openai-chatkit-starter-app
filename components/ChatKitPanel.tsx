@@ -42,6 +42,136 @@ const createInitialErrors = (): ErrorState => ({
   retryable: false,
 });
 
+type QuickStart = {
+  title: string;
+  description: string;
+  badge?: string;
+};
+
+type KnowledgePack = {
+  title: string;
+  meta: string;
+};
+
+type LiveSignal = {
+  label: string;
+  value: string;
+  delta: string;
+  trend: "up" | "down" | "steady";
+};
+
+type ActivityEvent = {
+  time: string;
+  summary: string;
+  tag: string;
+};
+
+type WorkflowSegment = {
+  title: string;
+  description: string;
+  status: "ready" | "running" | "paused";
+};
+
+const QUICK_STARTS: readonly QuickStart[] = [
+  {
+    title: "Generate safety briefing",
+    description: "Summarize overnight incidents and highlight operator alerts for the next shift.",
+    badge: "Briefing",
+  },
+  {
+    title: "Draft field escalation",
+    description: "Compose a ready-to-send update for regional supervisors with mitigation steps.",
+    badge: "Escalation",
+  },
+  {
+    title: "Convert maintenance log",
+    description: "Transform raw technician notes into a structured task report with follow-ups.",
+    badge: "Handoff",
+  },
+] as const;
+
+const KNOWLEDGE_PACKS: readonly KnowledgePack[] = [
+  {
+    title: "Operations handbook",
+    meta: "Updated 4 hours ago · 68 curated references",
+  },
+  {
+    title: "Signal diagnostics",
+    meta: "Live telemetry · 12 streams monitored",
+  },
+  {
+    title: "Emergency playbooks",
+    meta: "6 response templates · auto versioned",
+  },
+] as const;
+
+const LIVE_SIGNALS: readonly LiveSignal[] = [
+  {
+    label: "Active workflows",
+    value: "12",
+    delta: "+3",
+    trend: "up",
+  },
+  {
+    label: "Response latency",
+    value: "128 ms",
+    delta: "-18%",
+    trend: "down",
+  },
+  {
+    label: "Operator satisfaction",
+    value: "96%",
+    delta: "+2%",
+    trend: "up",
+  },
+] as const;
+
+const ACTIVITY_FEED: readonly ActivityEvent[] = [
+  {
+    time: "09:42",
+    summary: "Escalation note routed to central control with mitigation guidance.",
+    tag: "Automation",
+  },
+  {
+    time: "09:18",
+    summary: "Knowledge pack \"Signal diagnostics\" synced with newest sensor schema.",
+    tag: "Sync",
+  },
+  {
+    time: "08:51",
+    summary: "Operator feedback recorded: visibility improved after briefing tweak.",
+    tag: "Feedback",
+  },
+  {
+    time: "08:05",
+    summary: "Workflow hgg-ops/live-monitor confirmed stable after overnight redeploy.",
+    tag: "Status",
+  },
+] as const;
+
+const WORKFLOW_SEGMENTS: readonly WorkflowSegment[] = [
+  {
+    title: "Realtime monitor",
+    description: "Streaming signal ingest with anomaly tagging across 12 depots.",
+    status: "running",
+  },
+  {
+    title: "Operator co-pilot",
+    description: "Conversational reasoning with fact capture and escalation templates.",
+    status: "ready",
+  },
+  {
+    title: "Incident handoff",
+    description: "Auto-generate shift briefs and publish to dispatch Slack.",
+    status: "ready",
+  },
+  {
+    title: "Audit trail",
+    description: "Structured trace of actions with exportable timeline for compliance.",
+    status: "paused",
+  },
+] as const;
+
 export function ChatKitPanel({
   theme,
   onWidgetAction,
@@ -343,27 +473,291 @@ export function ChatKitPanel({
     });
   }
 
+  const nextTheme = theme === "dark" ? "light" : "dark";
+  const themeToggleLabel = nextTheme === "dark" ? "Switch to dark" : "Switch to light";
+  const themeToggleIcon = nextTheme === "dark" ? "🌑" : "🌞";
+  const statusBadgeStyles: Record<WorkflowSegment["status"], string> = {
+    running: "bg-emerald-500/15 text-emerald-400",
+    ready: "bg-blue-500/15 text-blue-500",
+    paused: "bg-amber-500/15 text-amber-500",
+  };
+  const statusLabel: Record<WorkflowSegment["status"], string> = {
+    running: "Live",
+    ready: "Ready",
+    paused: "Paused",
+  };
+
   return (
-    <div className="relative flex h-[90vh] w-full flex-col overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
-      <ChatKit
-        key={widgetInstanceKey}
-        control={chatkit.control}
-        className={
-          blockingError || isInitializingSession
-            ? "pointer-events-none opacity-0"
-            : "block h-full w-full"
-        }
-      />
-      <ErrorOverlay
-        error={blockingError}
-        fallbackMessage={
-          blockingError || !isInitializingSession
-            ? null
-            : "Loading assistant session..."
-        }
-        onRetry={blockingError && errors.retryable ? handleResetChat : null}
-        retryLabel="Restart chat"
-      />
+    <div className="flex flex-1 flex-col gap-8 text-[color:var(--foreground)]">
+      <header className="flex flex-wrap items-start justify-between gap-4 lg:items-center lg:gap-6">
+        <div className="space-y-2">
+          <span className="inline-flex items-center gap-2 rounded-full border border-divider bg-surface-muted px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted">
+            RoboRail · Live workspace
+          </span>
+          <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--primary)] dark:text-[var(--primary)]">
+            Control Studio for Guided Operations
+          </h1>
+          <p className="max-w-xl text-sm text-muted">
+            Orchestrate workflows, monitor live signals, and brief every operator with the same high quality context—without leaving the conversation.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-divider bg-surface px-4 py-2 text-sm font-medium text-[color:var(--primary)] shadow-card transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)]/60"
+            onClick={() => onThemeRequest(nextTheme)}
+          >
+            <span aria-hidden>{themeToggleIcon}</span>
+            {themeToggleLabel}
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-[color:var(--accent-foreground)] shadow-card transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)]/50"
+            onClick={handleResetChat}
+          >
+            Restart chat
+          </button>
+        </div>
+      </header>
+
+      <div className="grid gap-6 xl:grid-cols-[19rem_minmax(0,1fr)_18rem] xl:items-start">
+        <aside className="space-y-4">
+          <section className="rounded-3xl border border-divider bg-surface p-5 shadow-card backdrop-blur-xl">
+            <header className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                Quick start
+              </p>
+              <h2 className="text-lg font-semibold text-[color:var(--primary)]">
+                Mission recipes for today
+              </h2>
+            </header>
+            <ul className="mt-4 space-y-3">
+              {QUICK_STARTS.map((item) => (
+                <li key={item.title}>
+                  <div
+                    className="group rounded-2xl border border-transparent bg-surface-muted px-4 py-3 transition hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-accent-strong)]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-[color:var(--primary)]">
+                        {item.title}
+                      </p>
+                      {item.badge ? (
+                        <span className="inline-flex min-w-max items-center rounded-full bg-[color:var(--surface-accent)] px-2 py-0.5 text-[11px] font-medium text-[color:var(--accent)]">
+                          {item.badge}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-sm leading-5 text-muted">
+                      {item.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="rounded-3xl border border-divider bg-surface p-5 shadow-card backdrop-blur-xl">
+            <header className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                Knowledge packs
+              </p>
+              <h2 className="text-lg font-semibold text-[color:var(--primary)]">
+                Curated sources on deck
+              </h2>
+            </header>
+            <ul className="mt-4 space-y-3">
+              {KNOWLEDGE_PACKS.map((pack) => (
+                <li key={pack.title}>
+                  <div className="flex flex-col gap-1 rounded-2xl border border-divider bg-surface-muted px-4 py-3">
+                    <p className="text-sm font-semibold text-[color:var(--primary)]">
+                      {pack.title}
+                    </p>
+                    <p className="text-xs text-muted">{pack.meta}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+
+        <section className="flex flex-col gap-4">
+          <div className="relative flex min-h-[540px] flex-1 overflow-hidden rounded-[2.5rem] border border-divider bg-surface shadow-card backdrop-blur-2xl">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[rgba(59,130,246,0.16)] via-transparent to-transparent dark:from-[rgba(59,130,246,0.22)]" />
+            <ChatKit
+              key={widgetInstanceKey}
+              control={chatkit.control}
+              className={`z-0 h-full w-full transition-opacity duration-300 ${
+                blockingError || isInitializingSession
+                  ? "pointer-events-none opacity-0"
+                  : "opacity-100"
+              }`}
+            />
+            <ErrorOverlay
+              error={blockingError}
+              fallbackMessage={
+                blockingError || !isInitializingSession
+                  ? null
+                  : "Loading assistant session..."
+              }
+              onRetry={blockingError && errors.retryable ? handleResetChat : null}
+              retryLabel="Restart chat"
+            />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-3xl border border-divider bg-surface p-5 shadow-card backdrop-blur-xl">
+              <header className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                    Live signals
+                  </p>
+                  <h2 className="text-lg font-semibold text-[color:var(--primary)]">
+                    Health snapshot
+                  </h2>
+                </div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-500">
+                  ● Stable
+                </span>
+              </header>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {LIVE_SIGNALS.map((signal) => (
+                  <div
+                    key={signal.label}
+                    className="rounded-2xl border border-divider bg-surface-muted p-4"
+                  >
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted">
+                      {signal.label}
+                    </p>
+                    <div className="mt-3 flex items-baseline gap-2">
+                      <span className="text-2xl font-semibold text-[color:var(--primary)]">
+                        {signal.value}
+                      </span>
+                      <span
+                        className={`text-xs font-semibold ${
+                          signal.trend === "up"
+                            ? "text-emerald-500"
+                            : signal.trend === "down"
+                              ? "text-rose-500"
+                              : "text-muted"
+                        }`}
+                      >
+                        {signal.delta}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-divider bg-surface p-5 shadow-card backdrop-blur-xl">
+              <header className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                    Activity feed
+                  </p>
+                  <h2 className="text-lg font-semibold text-[color:var(--primary)]">
+                    Latest automations
+                  </h2>
+                </div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-[color:var(--surface-accent)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                  Auto-sync on
+                </span>
+              </header>
+              <ul className="mt-5 space-y-4">
+                {ACTIVITY_FEED.map((event) => (
+                  <li key={`${event.time}-${event.summary}`} className="flex gap-3">
+                    <div className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[color:var(--accent)]" />
+                    <div className="flex flex-1 flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-xs font-semibold text-muted">
+                          {event.time}
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-muted">
+                          {event.tag}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-5 text-muted">{event.summary}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="rounded-3xl border border-divider bg-surface p-5 shadow-card backdrop-blur-xl">
+            <header className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                Workflow map
+              </p>
+              <h2 className="text-lg font-semibold text-[color:var(--primary)]">
+                HGG · hgg-ops/live-monitor
+              </h2>
+            </header>
+            <ul className="mt-5 space-y-4">
+              {WORKFLOW_SEGMENTS.map((segment) => (
+                <li
+                  key={segment.title}
+                  className="rounded-2xl border border-divider bg-surface-muted px-4 py-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[color:var(--primary)]">
+                      {segment.title}
+                    </p>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${statusBadgeStyles[segment.status]}`}
+                    >
+                      {statusLabel[segment.status]}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted">{segment.description}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="rounded-3xl border border-divider bg-surface p-5 shadow-card backdrop-blur-xl">
+            <header className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                Integrations
+              </p>
+              <h2 className="text-lg font-semibold text-[color:var(--primary)]">
+                Connected services
+              </h2>
+            </header>
+            <ul className="mt-4 space-y-3">
+              <li className="flex items-start justify-between gap-3 rounded-2xl border border-divider bg-surface-muted px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-[color:var(--primary)]">Dispatch Slack</p>
+                  <p className="text-xs text-muted">Publishing shift briefs · last sync 12m ago</p>
+                </div>
+                <span className="mt-1 inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-500">
+                  Active
+                </span>
+              </li>
+              <li className="flex items-start justify-between gap-3 rounded-2xl border border-divider bg-surface-muted px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-[color:var(--primary)]">Observability bus</p>
+                  <p className="text-xs text-muted">Streaming diagnostics · latency 128 ms</p>
+                </div>
+                <span className="mt-1 inline-flex items-center rounded-full bg-blue-500/15 px-2 py-0.5 text-[11px] font-semibold text-blue-500">
+                  Synced
+                </span>
+              </li>
+              <li className="flex items-start justify-between gap-3 rounded-2xl border border-divider bg-surface-muted px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-[color:var(--primary)]">Compliance archive</p>
+                  <p className="text-xs text-muted">Daily export scheduled · pending review</p>
+                </div>
+                <span className="mt-1 inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-500">
+                  Action needed
+                </span>
+              </li>
+            </ul>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

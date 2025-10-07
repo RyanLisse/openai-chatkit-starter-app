@@ -1,34 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
   color-scheme: light;
+  --background: #f6f8fc;
+  --foreground: #0f172a;
+  --surface-elevated: rgba(255, 255, 255, 0.9);
+  --surface-muted: rgba(255, 255, 255, 0.72);
+  --surface-border: rgba(148, 163, 184, 0.4);
+  --surface-ring: rgba(15, 23, 42, 0.08);
+  --surface-accent: rgba(59, 130, 246, 0.1);
+  --surface-accent-strong: rgba(59, 130, 246, 0.16);
+  --accent: #2563eb;
+  --accent-foreground: #f8fafc;
+  --muted: rgba(148, 163, 184, 0.12);
+  --muted-foreground: #475569;
+  --primary: #1e293b;
+  --primary-foreground: #f8fafc;
+  --radius-sm: 0.625rem;
+  --radius-md: 1.25rem;
+  --radius-lg: 1.75rem;
+  --radius-xl: 2.5rem;
+  --card-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+  --divider: rgba(148, 163, 184, 0.28);
 }
 
 :root[data-color-scheme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
   color-scheme: dark;
+  --background: #020617;
+  --foreground: #e2e8f0;
+  --surface-elevated: rgba(2, 6, 23, 0.86);
+  --surface-muted: rgba(15, 23, 42, 0.75);
+  --surface-border: rgba(51, 65, 85, 0.65);
+  --surface-ring: rgba(148, 163, 184, 0.24);
+  --surface-accent: rgba(96, 165, 250, 0.18);
+  --surface-accent-strong: rgba(96, 165, 250, 0.25);
+  --accent: #93c5fd;
+  --accent-foreground: #0f172a;
+  --muted: rgba(30, 41, 59, 0.65);
+  --muted-foreground: rgba(148, 163, 184, 0.85);
+  --primary: #f8fafc;
+  --primary-foreground: #0f172a;
+  --card-shadow: 0 32px 72px rgba(2, 6, 23, 0.6);
+  --divider: rgba(51, 65, 85, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-scheme]) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
     color-scheme: dark;
+    --background: #020617;
+    --foreground: #e2e8f0;
+    --surface-elevated: rgba(2, 6, 23, 0.86);
+    --surface-muted: rgba(15, 23, 42, 0.75);
+    --surface-border: rgba(51, 65, 85, 0.65);
+    --surface-ring: rgba(148, 163, 184, 0.24);
+    --surface-accent: rgba(96, 165, 250, 0.18);
+    --surface-accent-strong: rgba(96, 165, 250, 0.25);
+    --accent: #93c5fd;
+    --accent-foreground: #0f172a;
+    --muted: rgba(30, 41, 59, 0.65);
+    --muted-foreground: rgba(148, 163, 184, 0.85);
+    --primary: #f8fafc;
+    --primary-foreground: #0f172a;
+    --card-shadow: 0 32px 72px rgba(2, 6, 23, 0.6);
+    --divider: rgba(51, 65, 85, 0.6);
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-mono: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  --color-card: var(--surface-elevated);
+  --color-card-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --font-sans: "Inter", "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+@layer utilities {
+  .bg-surface {
+    background-color: var(--surface-elevated);
+  }
+
+  .bg-surface-muted {
+    background-color: var(--surface-muted);
+  }
+
+  .border-divider {
+    border-color: var(--divider);
+  }
+
+  .shadow-card {
+    box-shadow: var(--card-shadow);
+  }
+
+  .ring-surface {
+    box-shadow: 0 0 0 1px var(--surface-ring);
+  }
+
+  .text-muted {
+    color: var(--muted-foreground);
+  }
 }
