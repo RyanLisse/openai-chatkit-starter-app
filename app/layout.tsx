@@ -1,10 +1,11 @@
 import Script from "next/script";
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
-  title: "AgentKit demo",
-  description: "Demo of ChatKit with hosted workflow",
+  title: "AI Sniping Bot - MEXC Trading",
+  description: "Automated AI-powered cryptocurrency sniping bot for MEXC exchange",
 };
 
 export default function RootLayout({
@@ -20,7 +21,9 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
